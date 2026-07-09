@@ -1,0 +1,22 @@
+FROM python:3.11-slim AS builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --break-system-packages -r requirements.txt
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY src/ ./src/
+COPY artifacts/ ./artifacts/
+COPY data/ ./data/
+COPY .env ./.env
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/src
+
+HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)" || exit 1
+
+EXPOSE 8000
+
+CMD ["uvicorn", "forgex.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

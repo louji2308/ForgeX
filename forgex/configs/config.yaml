@@ -1,0 +1,26 @@
+# ForgeX Configuration Reference
+# See Appendix B in Plan.md for full documentation
+data:
+  n_tenants: 10000
+  n_properties: 120
+  start_date: "2019-01-01"
+  end_date: "2024-12-31"
+  seed: 42
+
+fairness:
+  max_dp_diff: 0.10
+
+optimizer:
+  monthly_budget: 5000.0
+  monthly_crew_hours: 80.0
+  solver_time_limit_s: 30
+
+drift:
+  psi_threshold: 0.25
+
+mlops:
+  min_relative_improvement: 0.02
+
+narrative:
+  max_retries: 2
+  timeout_s: 6.0
