@@ -37,7 +37,22 @@ DRIVER_LABELS = {
     "lease_remaining_months": "lease term remaining",
     "payment_count_30d": "payment consistency",
     "payment_count_60d": "payment consistency",
+    "payment_count_90d": "payment consistency",
     "total_late_amount_30d": "total late amount",
+    "total_late_amount_60d": "total late amount",
+    "total_late_amount_90d": "total late amount",
+    "late_payment_count_90d": "recent late payments",
+    "days_late_trend_30d": "recent late payment trend",
+    "days_late_trend_90d": "late payment trend",
+    "complaint_sentiment_avg_60d": "complaint sentiment",
+    "complaint_sentiment_avg_90d": "complaint sentiment",
+    "avg_resolve_days_60d": "maintenance resolution speed",
+    "avg_resolve_days_90d": "maintenance resolution speed",
+    "complaint_count_90d": "recent complaints",
+    "current_rent": "current monthly rent",
+    "avg_market_rent": "average market rent",
+    "prior_interventions_365d": "prior retention offers",
+    "prior_intervention_accept_rate_365d": "prior offer acceptance",
 }
 
 

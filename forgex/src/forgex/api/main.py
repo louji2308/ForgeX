@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from forgex.api.schemas import (
     HealthResponse,
@@ -151,13 +151,18 @@ def _score_tenant(
 
     latest = tenant_rows.iloc[-1:]
 
-    hazards = state.hazard_model.model.predict(
-        latest[state.hazard_model.feature_names].fillna(0)
-    )
+    if hasattr(state.hazard_model.model, "predict_proba"):
+        hazard_probs = state.hazard_model.model.predict_proba(
+            latest[state.hazard_model.feature_names].fillna(0)
+        )[:, 1]
+    else:
+        hazard_probs = state.hazard_model.model.predict(
+            latest[state.hazard_model.feature_names].fillna(0)
+        )
     if hasattr(state.hazard_model.model, "_calibrator"):
-        hazards = state.hazard_model.model._calibrator.predict(hazards)
+        hazard_probs = state.hazard_model.model._calibrator.predict(hazard_probs)
 
-    risk_pct = float(hazards[0] * 100)
+    risk_pct = float(hazard_probs[0] * 100)
 
     drivers = None
     shap_values_raw = None
@@ -169,7 +174,19 @@ def _score_tenant(
         feature_row = latest[state.hazard_model.feature_names].iloc[0]
         drivers = top_shap_drivers(shap_series, feature_row, k=3)
 
-    return risk_pct, drivers, hazards
+    return risk_pct, drivers, hazard_probs
+
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/docs")
+
+
+@app.get("/tenants")
+def list_tenants():
+    if state.tenant_index:
+        return {"tenants": sorted(state.tenant_index)}
+    return {"tenants": []}
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -201,9 +218,14 @@ def score(tenant_id: str):
             state.person_period["tenant_id"] == tenant_id
         ]
         if len(tenant_rows) > 0:
-            all_hazards = state.hazard_model.model.predict(
-                tenant_rows[state.hazard_model.feature_names].fillna(0)
-            )
+            if hasattr(state.hazard_model.model, "predict_proba"):
+                all_hazards = state.hazard_model.model.predict_proba(
+                    tenant_rows[state.hazard_model.feature_names].fillna(0)
+                )[:, 1]
+            else:
+                all_hazards = state.hazard_model.model.predict(
+                    tenant_rows[state.hazard_model.feature_names].fillna(0)
+                )
             if hasattr(state.hazard_model.model, "_calibrator"):
                 all_hazards = state.hazard_model.model._calibrator.predict(all_hazards)
             survival_df = hazard_to_survival(

@@ -67,18 +67,21 @@ def compute_risk_table(
         test.groupby("tenant_id")["month_of_lease"].idxmax()
     ].copy()
 
-    hazards = model.model.predict(latest[model.feature_names].fillna(0))
+    if hasattr(model.model, "predict_proba"):
+        hazard_probs = model.model.predict_proba(latest[model.feature_names].fillna(0))[:, 1]
+    else:
+        hazard_probs = model.model.predict(latest[model.feature_names].fillna(0))
     if hasattr(model.model, "_calibrator"):
-        hazards = model.model._calibrator.predict(hazards)
+        hazard_probs = model.model._calibrator.predict(hazard_probs)
 
-    latest["risk_pct"] = (hazards * 100).round(1)
+    latest["risk_pct"] = (hazard_probs * 100).round(1)
     latest["risk_band"] = pd.cut(
         latest["risk_pct"],
         bins=[0, 20, 40, 60, 80, 100],
         labels=["Very Low", "Low", "Moderate", "High", "Critical"],
     )
 
-    return latest[["tenant_id", "unit_id", "risk_pct", "risk_band", "month_of_lease"]]
+    return latest[["tenant_id", "risk_pct", "risk_band", "month_of_lease"]]
 
 
 def render_portfolio_heatmap(risk_table: pd.DataFrame):
@@ -173,7 +176,10 @@ def render_tenant_detail(
         return
 
     # Survival curve
-    hazards = model.model.predict(tenant_rows[model.feature_names].fillna(0))
+    if hasattr(model.model, "predict_proba"):
+        hazards = model.model.predict_proba(tenant_rows[model.feature_names].fillna(0))[:, 1]
+    else:
+        hazards = model.model.predict(tenant_rows[model.feature_names].fillna(0))
     if hasattr(model.model, "_calibrator"):
         hazards = model.model._calibrator.predict(hazards)
 

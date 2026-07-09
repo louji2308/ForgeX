@@ -11,7 +11,7 @@ function useDebouncedSimulation(request, delayMs = 300) {
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch('/api/simulate', {
+        const res = await fetch('http://localhost:8000/simulate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(request),
@@ -202,7 +202,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/health')
+    fetch('http://localhost:8000/health')
       .then(r => r.json())
       .then(data => {
         if (data.tenants_indexed > 0) {

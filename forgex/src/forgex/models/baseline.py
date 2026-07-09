@@ -40,7 +40,11 @@ def hazard_to_survival(
             f"hazards must be in [0,1], found {len(bad)} out-of-range values"
         )
 
-    df = pd.DataFrame({"tenant_id": tenant_id, "month": month, "hazard": hazards})
+    df = pd.DataFrame({
+        "tenant_id": tenant_id.reset_index(drop=True),
+        "month": month.reset_index(drop=True),
+        "hazard": hazards.reset_index(drop=True),
+    })
     df = df.sort_values(["tenant_id", "month"])
     df["survival_prob"] = df.groupby("tenant_id")["hazard"].transform(
         lambda h: (1 - h).cumprod()
