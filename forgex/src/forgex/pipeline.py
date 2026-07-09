@@ -239,7 +239,7 @@ def main(quick: bool = False):
                     hidden_path = hidden_dir / "hidden_segments.parquet"
                     if hidden_path.exists():
                         hidden_seg = pd.read_parquet(hidden_path)
-                        train_cov = train[common_covariates].fillna(0)
+                        train_cov = train[["tenant_id"] + common_covariates].fillna(0)
                         cate_estimates = cate_models["t_learner"].predict_cate(train_cov)
                         segment_validation = validate_cate_recovers_segments(
                             cate_estimates, hidden_seg

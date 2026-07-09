@@ -89,11 +89,12 @@ class TLearnerCATE:
 
     def predict_cate(self, X: pd.DataFrame) -> pd.DataFrame:
         results = []
+        tenant_ids = X["tenant_id"].values if "tenant_id" in X.columns else X.index
+        X_pred = X[self.feature_names]
         for arm, model in self.models.items():
-            # Predict outcome if treated
-            Y_t = model.predict_proba(X[self.feature_names])[:, 1]
+            Y_t = model.predict_proba(X_pred)[:, 1]
             results.append(pd.DataFrame({
-                "tenant_id": X.index if isinstance(X, pd.DataFrame) else range(len(X)),
+                "tenant_id": tenant_ids,
                 "arm": arm,
                 "cate": Y_t,
             }))

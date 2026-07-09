@@ -25,6 +25,7 @@ class ScoreResponse(BaseModel):
     top_drivers: list[DriverDetail] = []
     narrative: str = ""
     narrative_source: str = ""
+    is_estimate: bool = False
 
 
 class WhatIfRequest(BaseModel):
@@ -34,12 +35,19 @@ class WhatIfRequest(BaseModel):
     retention_credit_usd: float = Field(default=0.0, ge=0, le=2000)
 
 
+class LeverDetail(BaseModel):
+    name: str
+    effect_pct: float
+    direction: str
+
+
 class WhatIfResponse(BaseModel):
     baseline_risk_pct: float
     scenario_risk_pct: float
     delta_pts: float
     recommendation: str
     narrative: str = ""
+    lever_breakdown: list[LeverDetail] = []
 
 
 class OptimizeRequest(BaseModel):
@@ -60,3 +68,13 @@ class HealthResponse(BaseModel):
     is_explainer_loaded: bool = False
     is_cate_loaded: bool = False
     tenants_indexed: int = 0
+
+
+class AiSearchRequest(BaseModel):
+    question: str
+    context: str = ""
+
+
+class AiSearchResponse(BaseModel):
+    answer: str
+    source: str = "ollama"

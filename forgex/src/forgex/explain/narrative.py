@@ -44,27 +44,31 @@ def generate_narrative(
     risk_pct: float,
     drivers: list[dict],
     llm_client: Any | None = None,
-    max_retries: int = 2,
-    timeout_s: float = 6.0,
+    llm_fn: Any | None = None,
+    max_retries: int = 1,
+    timeout_s: float = 30.0,
 ) -> dict:
     """Never let a flaky LLM call take down the risk explanation — the
     numeric SHAP output must always render even if the sentence doesn't."""
     if not drivers:
         raise ValueError("generate_narrative called with an empty drivers list")
 
-    if llm_client is not None:
+    if llm_client is not None or llm_fn is not None:
         prompt = _build_narrative_prompt(tenant_name, risk_pct, drivers)
         last_error: Exception | None = None
 
         for attempt in range(max_retries + 1):
             try:
-                response = llm_client.messages.create(
-                    model="claude-sonnet-4-6",
-                    max_tokens=150,
-                    messages=[{"role": "user", "content": prompt}],
-                    timeout=timeout_s,
-                )
-                text = response.content[0].text.strip()
+                if llm_fn is not None:
+                    text = llm_fn(prompt, timeout_s=timeout_s)
+                else:
+                    response = llm_client.messages.create(
+                        model="claude-sonnet-4-6",
+                        max_tokens=150,
+                        messages=[{"role": "user", "content": prompt}],
+                        timeout=timeout_s,
+                    )
+                    text = response.content[0].text.strip()
                 if not _narrative_is_grounded(text, risk_pct):
                     raise ValueError(
                         "Narrative failed grounding check — model may have invented a number"
