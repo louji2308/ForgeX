@@ -59,26 +59,31 @@ function useDebouncedSimulation(request, delayMs = 300) {
     if (!request || !request.tenant_id) return;
     setStatus("loading");
     const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(`${API_BASE}/simulate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(request),
-          signal: controller.signal,
+    const timer = setTimeout(function () {
+      fetch(`${API_BASE}/simulate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      })
+        .then(function (res) {
+          if (!res.ok) {
+            return res.json().catch(function () { return {}; }).then(function (body) {
+              throw new Error(body.message || body.detail || `Request failed with ${res.status}`);
+            });
+          }
+          return res.json();
+        })
+        .then(function (data) {
+          setResult(data);
+          setStatus("success");
+          setErrorMessage(null);
+        })
+        .catch(function (err) {
+          if (err.name === "AbortError") return;
+          setErrorMessage(err.message);
+          setStatus("error");
         });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.message || body.detail || `Request failed with ${res.status}`);
-        }
-        setResult(await res.json());
-        setStatus("success");
-        setErrorMessage(null);
-      } catch (err) {
-        if (err.name === "AbortError") return;
-        setErrorMessage(err.message);
-        setStatus("error");
-      }
     }, delayMs);
     return () => { clearTimeout(timer); controller.abort(); };
   }, [JSON.stringify(request), delayMs]);
@@ -146,7 +151,7 @@ function Landing({ onLaunch, health }) {
         <header className="topbar">
           <div className="brand">
             <span className="brand-mark"><Ic.logo width="30" height="30" /></span>
-            Forge<span className="brand-x">X</span>
+            <span className="brand-word">Forge<span className="brand-x">X</span></span>
           </div>
           <button className="btn btn-primary" onClick={onLaunch}>
             See the Demo <span className="btn-icon"><Ic.arrow width="16" height="16" /></span>
