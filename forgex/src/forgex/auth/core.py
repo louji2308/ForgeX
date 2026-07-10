@@ -39,7 +39,7 @@ def validate_token(token: str) -> dict | None:
     entry = tokens.get(token)
     if entry is None:
         return None
-    if time.time() - entry["created_at"] > 86400:
+    if time.time() - entry["created_at"] > 2592000:
         tokens.pop(token, None)
         return None
     return entry

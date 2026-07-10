@@ -52,7 +52,7 @@ def _run_dashboard() -> None:
     cmd = [
         _sys.executable, "-m", "streamlit", "run",
         str(Path(__file__).resolve().parent.parent.parent / "frontend" / "dashboard.py"),
-        "--server.port", "8501",
+        "--server.port", "8051",
         "--server.headless", "true",
     ]
     subprocess.run(cmd)
